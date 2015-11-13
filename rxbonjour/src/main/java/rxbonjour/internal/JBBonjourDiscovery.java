@@ -49,32 +49,6 @@ public final class JBBonjourDiscovery implements BonjourDiscovery {
 
 	/* Begin private */
 
-	/**
-	 * Creates a new BonjourEvent instance from an Nsd Service info object.
-	 *
-	 * @param type        Type of event, either ADDED or REMOVED
-	 * @param serviceInfo ServiceInfo containing information about the changed service
-	 * @return A BonjourEvent containing the necessary information
-	 */
-	@TargetApi(LOLLIPOP) private BonjourEvent newBonjourEvent(BonjourEvent.Type type, NsdServiceInfo serviceInfo) {
-		// Construct a new BonjourService
-		BonjourService.Builder serviceBuilder = new BonjourService.Builder(serviceInfo.getServiceName(), serviceInfo.getServiceType());
-
-		// Prepare TXT record Bundle (on Lollipop and up)
-		if (Build.VERSION.SDK_INT >= LOLLIPOP) {
-			Map<String, byte[]> attributes = serviceInfo.getAttributes();
-			for (String key : attributes.keySet()) {
-				serviceBuilder.addTxtRecord(key, new String(attributes.get(key), Charset.forName("UTF-8")));
-			}
-		}
-
-		// Add host address and port
-		serviceBuilder.addAddress(serviceInfo.getHost());
-		serviceBuilder.setPort(serviceInfo.getPort());
-
-		// Create and return an event wrapping the BonjourService
-		return new BonjourEvent(type, serviceBuilder.build());
-	}
 
 	/**
 	 * Returns the NsdManager shared among all subscribers for Bonjour events, creating it if necessary.
@@ -116,9 +90,11 @@ public final class JBBonjourDiscovery implements BonjourDiscovery {
 					}
 
 					@Override public void onDiscoveryStarted(String serviceType) {
+
 					}
 
 					@Override public void onDiscoveryStopped(String serviceType) {
+
 					}
 
 					@Override public void onServiceFound(NsdServiceInfo serviceInfo) {
@@ -128,7 +104,7 @@ public final class JBBonjourDiscovery implements BonjourDiscovery {
 
 					@Override public void onServiceLost(NsdServiceInfo serviceInfo) {
 						if (!subscriber.isUnsubscribed()) {
-							subscriber.onNext(newBonjourEvent(BonjourEvent.Type.REMOVED, serviceInfo));
+							subscriber.onNext(NSDHelper.newBonjourEvent(BonjourEvent.Type.REMOVED, serviceInfo));
 						}
 					}
 				};
@@ -147,11 +123,13 @@ public final class JBBonjourDiscovery implements BonjourDiscovery {
 
 								@Override public void onServiceResolved(NsdServiceInfo serviceInfo) {
 									if (!subscriber.isUnsubscribed()) {
-										subscriber.onNext(newBonjourEvent(BonjourEvent.Type.ADDED, serviceInfo));
+										subscriber.onNext(NSDHelper.newBonjourEvent(BonjourEvent.Type.ADDED, serviceInfo));
 									}
 
 									// Inform the backlog to continue processing
-									resolveBacklog.proceed();
+									if(resolveBacklog !=  null){
+										resolveBacklog.proceed();
+									}
 								}
 							});
 						}

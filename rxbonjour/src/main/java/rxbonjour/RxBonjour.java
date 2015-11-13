@@ -5,10 +5,13 @@ import android.os.Build;
 
 import rxbonjour.exc.TypeMalformedException;
 import rxbonjour.internal.BonjourDiscovery;
+import rxbonjour.internal.BonjourRegistration;
 import rxbonjour.internal.BonjourSchedulers;
 import rxbonjour.internal.JBBonjourDiscovery;
+import rxbonjour.internal.NSDBonjourRegistration;
 import rxbonjour.internal.SupportBonjourDiscovery;
 import rxbonjour.model.BonjourEvent;
+import rxbonjour.model.BonjourService;
 
 import static android.os.Build.VERSION_CODES.JELLY_BEAN;
 
@@ -19,6 +22,8 @@ import static android.os.Build.VERSION_CODES.JELLY_BEAN;
 public final class RxBonjour {
 
 	private static final String TYPE_PATTERN = "_[a-zA-Z0-9\\-]+.(_tcp|_udp)";
+
+	private static BonjourRegistration registration;
 
 	private RxBonjour() {
 		throw new AssertionError("no instances");
@@ -82,6 +87,14 @@ public final class RxBonjour {
 				.compose(BonjourSchedulers.<BonjourEvent>startSchedulers());
 	}
 
+	public static rx.Observable<BonjourEvent> register(Context context, BonjourService bonjourService) {
+		return getRegistration().register(context, bonjourService).compose(BonjourSchedulers.<BonjourEvent>startSchedulers());
+	}
+
+	public static rx.Observable<BonjourEvent> unRegister(Context context, BonjourService bonjourService) {
+		return getRegistration().unregister(context, bonjourService).compose(BonjourSchedulers.<BonjourEvent>startSchedulers());
+	}
+
 	/**
 	 * Checks the provided type String against Bonjour specifications, and returns whether or not the type is valid.
 	 *
@@ -90,5 +103,13 @@ public final class RxBonjour {
 	 */
 	public static boolean isBonjourType(String type) {
 		return type.matches(TYPE_PATTERN);
+	}
+
+
+	private static BonjourRegistration getRegistration(){
+		if(registration == null){
+			registration = new NSDBonjourRegistration();
+		}
+		return registration;
 	}
 }

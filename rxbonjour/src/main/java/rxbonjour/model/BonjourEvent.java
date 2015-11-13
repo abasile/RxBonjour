@@ -9,7 +9,9 @@ public class BonjourEvent {
 
 	public enum Type {
 		ADDED,
-		REMOVED
+		REMOVED,
+		REGISTERED,
+		UNREGISTERED
 	}
 
 	private Type mType;

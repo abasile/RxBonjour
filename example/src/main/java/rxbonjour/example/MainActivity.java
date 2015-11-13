@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import butterknife.Bind;
@@ -29,10 +30,13 @@ public class MainActivity extends AppCompatActivity {
 
 	@Bind(R.id.rv) rxbonjour.example.rv.Rv rvItems;
 	@Bind(R.id.et_type) EditText etInput;
+	@Bind(R.id.service_registered_info)	TextView serviceInfo;
 	private RvBaseAdapter<BonjourService> adapter;
 
 	private Subscription nsdSubscription;
-	private boolean useNsdManager = false;
+	private Subscription registrationSubscription;
+    BonjourService currentBonjourService;
+	private boolean useNsdManager = true;
 
 	@Override protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -77,13 +81,58 @@ public class MainActivity extends AppCompatActivity {
 		}
 	}
 
+	@OnClick(R.id.button_register) void onRegisterClicked() {
+        if(currentBonjourService != null){
+            unregister();
+        }
+		else{
+            register();
+        }
+	}
+
 	@OnItemSelected(R.id.spinner) void onSpinnerItemSelected(AdapterView<?> adapter, View view, int position, long id) {
 		// NsdManager implementation is represented by the second item in the spinner's array
-		useNsdManager = (position == 1);
+		useNsdManager = (position == 0);
 		restartDiscovery();
 	}
 
 	/* Begin private */
+    private  void unregister(){
+        RxBonjour.unRegister(this, currentBonjourService)
+                .subscribe(
+                        new Action1<BonjourEvent>() {
+                            @Override
+                            public void call(BonjourEvent bonjourEvent) {
+                                BonjourService service = bonjourEvent.getService();
+                                switch (bonjourEvent.getType()) {
+                                    case UNREGISTERED:
+                                        currentBonjourService = null;
+                                        serviceInfo.setText(service.getName() + " unregistered");
+                                        break;
+                                }
+                    }
+                }
+        );
+
+    }
+	private  void register(){
+		if(registrationSubscription != null){
+			registrationSubscription.unsubscribe();
+		}
+		registrationSubscription = RxBonjour.register(this, new BonjourService.Builder("BonjourRxTest", "_http._tcp.").setPort(55667).build()).subscribe(new Action1<BonjourEvent>() {
+			@Override
+			public void call(BonjourEvent bonjourEvent) {
+				currentBonjourService = bonjourEvent.getService();
+				switch (bonjourEvent.getType()) {
+					case REGISTERED:
+						serviceInfo.setText(currentBonjourService.getName() + " registered");
+						break;
+				}
+			}
+		});
+	}
+
+
 
 	private void unsubscribe() {
 		if (nsdSubscription != null) {
@@ -103,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
 		// Cancel any previous subscription
 		unsubscribe();
 
-		// Clear the adapter's items, then start a new discovery
+		// Clear the adapter's items, then register a new discovery
 		adapter.clearItems();
 		nsdSubscription = RxBonjour.startDiscovery(this, input, useNsdManager)
 				.subscribe(new Action1<BonjourEvent>() {

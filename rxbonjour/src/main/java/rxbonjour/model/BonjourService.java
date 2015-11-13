@@ -136,7 +136,7 @@ public class BonjourService {
 
 		if (mPort != that.mPort) return false;
 		if (!mName.equals(that.mName)) return false;
-		if (!mType.equals(that.mType)) return false;
+		if (mType != null ?  !mType.equals(that.mType) : that.mType != null) return false;
 		if (mV4Host != null ? !mV4Host.equals(that.mV4Host) : that.mV4Host != null) return false;
 		return !(mV6Host != null ? !mV6Host.equals(that.mV6Host) : that.mV6Host != null);
 	}
