@@ -23,7 +23,7 @@ public final class RxBonjour {
 
 	private static final String TYPE_PATTERN = "_[a-zA-Z0-9\\-]+.(_tcp|_udp)";
 
-	private static BonjourRegistration registration;
+	private static BonjourRegistration registration; // keep a reference to registration listener
 
 	private RxBonjour() {
 		throw new AssertionError("no instances");

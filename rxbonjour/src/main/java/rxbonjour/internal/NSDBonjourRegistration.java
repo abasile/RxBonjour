@@ -133,6 +133,7 @@ public class NSDBonjourRegistration implements BonjourRegistration {
             if (!subscriber.isUnsubscribed()) {
                 BonjourService bonjourService = NSDHelper.toBonjourService(nsdServiceInfo);
                 subscriber.onNext(new BonjourEvent(BonjourEvent.Type.REGISTERED, bonjourService));
+                subscriber.onCompleted();
                 listeners.put(bonjourService, this);
             }
         }
