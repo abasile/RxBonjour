@@ -10,6 +10,7 @@ import rxbonjour.internal.BonjourSchedulers;
 import rxbonjour.internal.JBBonjourDiscovery;
 import rxbonjour.internal.NSDBonjourRegistration;
 import rxbonjour.internal.SupportBonjourDiscovery;
+import rxbonjour.internal.SupportBonjourRegistration;
 import rxbonjour.model.BonjourEvent;
 import rxbonjour.model.BonjourService;
 
@@ -108,7 +109,7 @@ public final class RxBonjour {
 
 	private static BonjourRegistration getRegistration(){
 		if(registration == null){
-			registration = new NSDBonjourRegistration();
+			registration = new SupportBonjourRegistration();
 		}
 		return registration;
 	}
